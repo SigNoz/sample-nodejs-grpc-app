@@ -3,8 +3,8 @@ const { registerInstrumentations } = require('@opentelemetry/instrumentation');
 const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node');
 const { Resource } = require('@opentelemetry/resources');
 const { SemanticResourceAttributes } = require('@opentelemetry/semantic-conventions');
-const { SimpleSpanProcessor } = require('@opentelemetry/sdk-trace-base');
-const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
+const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base');
+const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
 const { GrpcInstrumentation } = require('@opentelemetry/instrumentation-grpc');
 const grpc = require('@grpc/grpc-js');
 
@@ -17,17 +17,12 @@ module.exports = (serviceName) => {
         }),
     });
 
-    let exporter;
-    if (EXPORTER.toLowerCase().startsWith('otlp')) {
-        exporter = new OTLPTraceExporter({
-            serviceName,
-            credentials: grpc.credentials.createInsecure(),
-        });
-    } else {
-        return console.error(`Unknown exporter ${EXPORTER}`);
-    }
+    const exporter = new OTLPTraceExporter({
+        serviceName,
+        url: 'http://localhost:4318/v1/traces'
+    });
 
-    provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
+    provider.addSpanProcessor(new BatchSpanProcessor(exporter));
 
     // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
     provider.register();

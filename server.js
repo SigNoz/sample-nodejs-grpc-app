@@ -31,11 +31,7 @@ function sayHello(call, callback) {
     span.addEvent(`invoking sayHello() to ${call.request.getName()}`);
     const reply = new messages.HelloReply();
     reply.setMessage(`Hello ${call.request.getName()}`);
-    callback({
-        code: 400,
-        message: "invalid input",
-        status: grpc.status.INTERNAL
-    })
+    callback(null, reply)
     span.end();
 }
 
